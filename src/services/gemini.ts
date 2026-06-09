@@ -126,6 +126,43 @@ export async function* streamGeminiResponse(
   systemPrompt: string,
   signal?: AbortSignal
 ): AsyncGenerator<string> {
+  const clientApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (clientApiKey && clientApiKey !== 'your_gemini_api_key_here' && clientApiKey.startsWith('AIzaSy')) {
+    try {
+      const genAI = new GoogleGenerativeAI(clientApiKey);
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-pro',
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        ],
+        systemInstruction: systemPrompt,
+      });
+
+      const chat = model.startChat({
+        history: messages.slice(0, -1).map((m: any) => ({
+          role: m.role,
+          parts: [{ text: m.text }],
+        })),
+      });
+
+      const lastMessage = messages[messages.length - 1]?.text ?? '';
+      const streamResult = await chat.sendMessageStream(lastMessage);
+
+      for await (const chunk of streamResult.stream) {
+        if (signal?.aborted) throw new Error('AbortError');
+        const text = chunk.text();
+        if (text) yield text;
+      }
+      return;
+    } catch (err) {
+      console.error('Client-side Gemini streaming failed, falling back to proxy:', err);
+    }
+  }
+
   const response = await fetch(`${PROXY_URL}/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
