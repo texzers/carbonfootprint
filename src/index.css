@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* ─── Design Tokens ────────────────────────────────────────────────────────── */
+:root {
+  --eco-forest:   #1B4332;
+  --eco-leaf:     #40916C;
+  --eco-mint:     #74C69D;
+  --eco-mist:     #D8F3DC;
+  --eco-earth:    #774936;
+  --eco-sky:      #4895EF;
+  --eco-sun:      #F4A261;
+  --eco-stone:    #F8F9FA;
+  --eco-ink:      #1A1A2E;
+  --eco-slate:    #6C757D;
+}
+
+/* ─── Tailwind Theme ───────────────────────────────────────────────────────── */
+@theme {
+  --color-eco-forest:  #1B4332;
+  --color-eco-leaf:    #40916C;
+  --color-eco-mint:    #74C69D;
+  --color-eco-mist:    #D8F3DC;
+  --color-eco-earth:   #774936;
+  --color-eco-sky:     #4895EF;
+  --color-eco-sun:     #F4A261;
+  --color-eco-stone:   #F8F9FA;
+  --color-eco-ink:     #1A1A2E;
+  --color-eco-slate:   #6C757D;
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body:    "Inter", sans-serif;
+  --font-mono:    "JetBrains Mono", monospace;
+
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-elevated: 0 8px 32px rgba(27,67,50,0.12);
+
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-xl:  32px;
+}
+
+/* ─── Base Styles ──────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--eco-ink);
+  background-color: var(--eco-stone);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Focus Rings (WCAG 2.1 AA) ────────────────────────────────────────────── */
+:focus-visible {
+  outline: 3px solid var(--eco-leaf);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ─── Custom scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--eco-mist);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--eco-mint);
+  border-radius: 99px;
+}
+
+/* ─── Typography ───────────────────────────────────────────────────────────── */
+.font-display {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40%           { transform: scale(1.2); opacity: 1; }
+}
+
+.animate-slide-up   { animation: slide-up 0.3s ease-out; }
+.animate-fade-in    { animation: fade-in 0.2s ease-out; }
+.animate-bounce     { animation: bounce-dot 1.2s infinite ease-in-out; }
+
+/* ─── Reduced Motion ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ─── Range input styling ──────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 99px;
+  cursor: pointer;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--eco-leaf);
+  border: 3px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--eco-mint);
+}
+
+/* ─── Gradient backgrounds ─────────────────────────────────────────────────── */
+.bg-gradient-eco {
+  background: linear-gradient(135deg, var(--eco-forest) 0%, var(--eco-leaf) 60%, var(--eco-mint) 100%);
+}
+
+/* ─── High-contrast mode support ───────────────────────────────────────────── */
+@media (forced-colors: active) {
+  .animate-spin, .animate-bounce {
+    animation: none;
+  }
+}

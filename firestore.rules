@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isValidKgCO2e() {
+      return request.resource.data.kgCO2e is number
+          && request.resource.data.kgCO2e >= 0
+          && request.resource.data.kgCO2e <= 100000; // Sanity ceiling
+    }
+
+    function isValidCategory() {
+      return request.resource.data.category in
+        ['transport', 'energy', 'food', 'shopping', 'travel'];
+    }
+
+    function hasRequiredLogFields() {
+      return request.resource.data.keys().hasAll(['date', 'category', 'kgCO2e', 'source'])
+          && isValidKgCO2e()
+          && isValidCategory();
+    }
+
+    function isValidGoalStatus() {
+      return request.resource.data.status in ['active', 'completed', 'abandoned'];
+    }
+
+    // ─── User data: only the owner can read/write ─────────────────────────────
+
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+
+      // Profile subcollection
+      match /profile/{docId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+
+      // Settings subcollection
+      match /settings/{docId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+
+      // Carbon logs — strict server-side validation
+      match /logs/{logId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated()
+                    && isOwner(userId)
+                    && hasRequiredLogFields();
+        allow update: if isAuthenticated()
+                    && isOwner(userId)
+                    && isValidKgCO2e()
+                    && isValidCategory();
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
+
+      // Goals subcollection
+      match /goals/{goalId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow create: if isAuthenticated()
+                    && isOwner(userId)
+                    && request.resource.data.keys().hasAll(['title', 'category', 'targetReduction', 'deadline', 'status'])
+                    && isValidGoalStatus()
+                    && request.resource.data.targetReduction > 0;
+        allow update: if isAuthenticated() && isOwner(userId);
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
+
+      // Cached score (written by Cloud Functions only in production)
+      match /cache/{docId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        // Only Cloud Functions write to cache — use service account
+        allow write: if false;
+      }
+    }
+
+    // ─── Deny all other access ────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
